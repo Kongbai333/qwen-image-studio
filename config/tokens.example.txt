@@ -1,0 +1,7 @@
+# Copy to the runtime data directory as tokens.txt.
+# Each non-comment line supports:
+#   hf_xxx
+#   name|hf_xxx
+#   name|hf_xxx|note
+#   name|hf_xxx|note|http://proxy.example:8080
+hf_REPLACE_WITH_YOUR_READ_TOKEN

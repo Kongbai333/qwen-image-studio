@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>登录 · Qwen Studio</title>
+<link rel="stylesheet" href="/static/theme.css" />
+<style>
+  .login-page {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    align-items: stretch;
+  }
+
+  /* ---------- 左侧品牌区 ---------- */
+  .brand-side {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 56px clamp(28px, 6vw, 84px);
+    background: var(--bg-soft);
+    border-right: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .hero-title {
+    font-size: clamp(28px, 3.2vw, 40px);
+    line-height: 1.18;
+    letter-spacing: -0.025em;
+    margin: 26px 0 16px;
+    color: var(--text);
+  }
+  .hero-title em {
+    font-style: normal;
+    color: var(--accent);
+  }
+  .hero-sub {
+    color: var(--muted);
+    font-size: 14px;
+    max-width: 440px;
+    line-height: 1.8;
+  }
+
+  .feat-list {
+    display: grid;
+    gap: 11px;
+    margin-top: 34px;
+    max-width: 440px;
+  }
+  .feat {
+    padding: 12px 15px;
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent-line);
+  }
+  .feat b { display: block; font-size: 13px; margin-bottom: 2px; color: var(--text); }
+  .feat span { font-size: 12.2px; color: var(--muted); }
+
+  /* ---------- 右侧登录区 ---------- */
+  .auth-side {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 26px;
+    background: var(--bg);
+  }
+  .auth-card {
+    width: min(396px, 100%);
+    padding: 30px;
+  }
+  .auth-head { margin-bottom: 22px; }
+  .auth-head h1 { font-size: 20px; margin-bottom: 6px; }
+  .auth-head p { margin: 0; color: var(--muted); font-size: 13px; }
+
+  .auth-tabs {
+    display: flex;
+    gap: 3px;
+    padding: 3px;
+    margin-bottom: 22px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+  }
+  .auth-tabs button {
+    flex: 1;
+    padding: 8px;
+    border: 0;
+    border-radius: var(--radius-xs);
+    background: transparent;
+    color: var(--muted);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: 0.14s;
+  }
+  .auth-tabs button:hover { color: var(--text); }
+  .auth-tabs button.on {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .auth-form { display: flex; flex-direction: column; gap: 15px; }
+  .key-input {
+    font-family: var(--mono);
+    font-size: 14px !important;
+    letter-spacing: 0.06em;
+    text-align: center;
+    padding: 13px !important;
+  }
+  .auth-msg {
+    min-height: 19px;
+    font-size: 12.5px;
+    color: var(--err);
+    text-align: center;
+  }
+  .auth-foot {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    font-size: 11.8px;
+    color: var(--dim);
+    text-align: center;
+    line-height: 1.75;
+  }
+
+  @media (max-width: 900px) {
+    .login-page { grid-template-columns: 1fr; }
+    .brand-side {
+      border-right: 0;
+      border-bottom: 1px solid var(--border);
+      padding: 38px 26px 30px;
+    }
+    .feat-list { display: none; }
+    .hero-title { font-size: 26px; margin-top: 18px; }
+    .auth-side { padding: 28px 20px 48px; }
+  }
+</style>
+</head>
+<body>
+<div class="login-page">
+  <!-- 左：品牌 -->
+  <section class="brand-side">
+    <div class="brand">
+      <div class="brand-mark">Q</div>
+      <div class="brand-text">
+        <b>Qwen Studio</b>
+        <span>Image 2.1 · GGUF 图像工坊</span>
+      </div>
+    </div>
+
+    <h1 class="hero-title">把想法写成图，<br /><em>一句话就够</em></h1>
+    <p class="hero-sub">
+      文本生图、图像编辑、透明底 PNG 三种模式，参数与官方 Space 完全一致。
+      使用卡密进入，每次生成消耗一次额度。
+    </p>
+
+    <div class="feat-list">
+      <div class="feat">
+        <b>卡密即账号</b>
+        <span>无需注册。一张卡密带次数与有效期，用完即止。</span>
+      </div>
+      <div class="feat">
+        <b>多出口配额池</b>
+        <span>服务端自动在账号与代理之间调度，你只管出图。</span>
+      </div>
+      <div class="feat">
+        <b>作品自动留存</b>
+        <span>每次生成连同提示词与全部参数进画廊，随时复用。</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 右：登录 -->
+  <section class="auth-side">
+    <div class="card auth-card">
+      <div class="auth-head">
+        <h1>进入工坊</h1>
+        <p>输入卡密，或用管理员口令进入控制台</p>
+      </div>
+
+      <div class="auth-tabs" id="tabs">
+        <button data-mode="license" class="on">卡密登录</button>
+        <button data-mode="admin">管理员</button>
+      </div>
+
+      <form class="auth-form" id="form" autocomplete="off">
+        <div class="field" id="keyField">
+          <label for="key">卡密</label>
+          <input
+            type="text"
+            id="key"
+            class="key-input"
+            placeholder="QWEN-XXXX-XXXX-XXXX-XXXX"
+            spellcheck="false"
+          />
+        </div>
+
+        <div class="field hidden" id="pwField">
+          <label for="password">管理员口令</label>
+          <input type="password" id="password" placeholder="请输入管理员口令" />
+        </div>
+
+        <div class="auth-msg" id="msg"></div>
+
+        <button class="btn block lg" id="submit" type="submit">进入</button>
+      </form>
+
+      <div class="auth-foot">
+        卡密由管理员发放，一张卡密含固定次数与有效期<br />
+        忘记卡密请联系发放人
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+let mode = "license";
+
+/* 卡密输入自动整理：大写、每 4 位一组 */
+function formatKey(v) {
+  let s = String(v || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+  if (s.startsWith("QWEN")) s = s.slice(4);
+  const body = s.slice(0, 16);
+  const groups = body.match(/.{1,4}/g) || [];
+  return body ? "QWEN-" + groups.join("-") : "";
+}
+
+$("key").addEventListener("input", (e) => {
+  const atEnd = e.target.selectionStart === e.target.value.length;
+  e.target.value = formatKey(e.target.value);
+  if (atEnd) e.target.setSelectionRange(e.target.value.length, e.target.value.length);
+});
+
+$("tabs").querySelectorAll("button").forEach((b) => {
+  b.onclick = () => {
+    mode = b.dataset.mode;
+    $("tabs").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b));
+    $("keyField").classList.toggle("hidden", mode !== "license");
+    $("pwField").classList.toggle("hidden", mode !== "admin");
+    $("msg").textContent = "";
+    (mode === "license" ? $("key") : $("password")).focus();
+  };
+});
+
+function setMsg(t, bad = true) {
+  const el = $("msg");
+  el.textContent = t;
+  el.style.color = bad ? "var(--err)" : "var(--ok)";
+}
+
+$("form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const btn = $("submit");
+  const body =
+    mode === "license"
+      ? { mode: "license", key: $("key").value.trim() }
+      : { mode: "admin", password: $("password").value };
+
+  if (mode === "license" && !body.key) return setMsg("请输入卡密");
+  if (mode === "admin" && !body.password) return setMsg("请输入口令");
+
+  btn.disabled = true;
+  const old = btn.textContent;
+  btn.innerHTML = '<span class="spin"></span> 验证中';
+  setMsg("", false);
+
+  try {
+    const r = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.detail || `登录失败（HTTP ${r.status}）`);
+
+    setMsg("登录成功，正在进入…", false);
+    location.href = data.role === "admin" ? "/admin" : "/app";
+  } catch (err) {
+    setMsg(err.message || "登录失败");
+    btn.disabled = false;
+    btn.textContent = old;
+  }
+});
+
+/* 已登录就直接跳走，别让用户重复输 */
+(async () => {
+  try {
+    const me = await (await fetch("/api/auth/me")).json();
+    if (me.authenticated) location.href = me.role === "admin" ? "/admin" : "/app";
+  } catch { /* 忽略 */ }
+})();
+
+(mode === "license" ? $("key") : $("password")).focus();
+</script>
+</body>
+</html>

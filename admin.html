@@ -1,0 +1,1843 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>控制台 · Qwen Studio</title>
+<link rel="stylesheet" href="/static/theme.css" />
+<style>
+  .admin { display: grid; grid-template-columns: 208px 1fr; min-height: 100vh; }
+
+  /* ---------- 侧栏 ---------- */
+  .sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 14px 10px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+  }
+  .side-brand {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 6px 8px 18px;
+  }
+  .nav-group { margin-bottom: 12px; }
+  .nav-label {
+    padding: 0 9px 5px;
+    font-size: 10.5px;
+    color: var(--dim);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 7px 9px;
+    border-radius: var(--radius-sm);
+    color: var(--text-2);
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+    user-select: none;
+  }
+  .nav-item svg { width: 15px; height: 15px; flex: none; opacity: 0.65; }
+  .nav-item:hover { background: var(--surface-3); }
+  .nav-item.on {
+    background: var(--accent-soft);
+    color: var(--accent-hover);
+    font-weight: 500;
+  }
+  .nav-item.on svg { opacity: 1; color: var(--accent); }
+  .nav-badge {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .side-foot {
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .side-link {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 7px 9px;
+    border-radius: var(--radius-sm);
+    color: var(--muted);
+    font-size: 12.5px;
+    cursor: pointer;
+  }
+  .side-link:hover { background: var(--surface-3); color: var(--text); }
+  .side-link svg { width: 14px; height: 14px; opacity: 0.7; }
+
+  /* ---------- 主区 ---------- */
+  .main { min-width: 0; display: flex; flex-direction: column; }
+  .content {
+    padding: 24px 30px 52px;
+    width: 100%;
+    max-width: 1720px;
+    margin: 0 auto;
+  }
+
+  .page-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .page-head h1 { font-size: 19px; margin-bottom: 3px; letter-spacing: -0.015em; }
+  .page-head p { margin: 0; color: var(--muted); font-size: 12.5px; }
+  .upd { font-size: 12px; color: var(--dim); align-self: center; }
+  .upd b { color: var(--text-2); font-weight: 500; font-variant-numeric: tabular-nums; }
+
+  /* ---------- 监控大卡 ---------- */
+  .monitor { padding: 0; overflow: hidden; margin-bottom: 10px; }
+  .mon-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .mon-body {
+    display: grid;
+    grid-template-columns: 200px 1fr 1fr;
+    gap: 0;
+  }
+  .mon-cell {
+    padding: 16px 18px;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 172px;
+  }
+  .mon-cell:last-child { border-right: 0; }
+
+  .gauge { position: relative; display: grid; place-items: center; height: 132px; }
+  .gauge svg { transform: rotate(-90deg); }
+  .gauge-val {
+    position: absolute;
+    text-align: center;
+    line-height: 1.2;
+  }
+  .gauge-val b { display: block; font-size: 26px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .gauge-val span { font-size: 11.5px; color: var(--muted); }
+
+  .mini-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    height: 100%;
+  }
+  .mini {
+    padding: 11px 13px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+  }
+  .mini-k { font-size: 11.5px; color: var(--muted); margin-bottom: 3px; }
+  .mini-v { font-size: 19px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.2; }
+  .mini-s { font-size: 11px; color: var(--dim); margin-top: 1px; }
+
+  .spark-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .spark-head b { font-size: 12.5px; font-weight: 500; }
+  .spark-head span { font-size: 11.5px; color: var(--dim); }
+
+  .mon-foot {
+    padding: 9px 18px;
+    border-top: 1px solid var(--border);
+    background: var(--surface-2);
+    font-size: 11.5px;
+    color: var(--dim);
+  }
+
+  /* ---------- 统计卡 ---------- */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .stat {
+    padding: 15px 17px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    transition: border-color 0.14s, box-shadow 0.14s;
+  }
+  .stat:hover { border-color: var(--border-strong); box-shadow: 0 2px 8px rgba(16, 24, 40, 0.06); }
+  .stat-top {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--muted);
+    font-size: 12px;
+    margin-bottom: 7px;
+  }
+  .stat-top svg { width: 13px; height: 13px; margin-left: auto; opacity: 0.55; color: var(--accent); }
+  .stat-v {
+    font-size: 27px;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.12;
+    color: var(--text);
+  }
+  .stat-s { font-size: 11.5px; color: var(--dim); margin-top: 4px; }
+
+  /* ---------- 图表区 ---------- */
+  .chart-grid {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .chart-card { padding: 0; display: flex; flex-direction: column; }
+  .chart-head {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 13px 16px 6px;
+    flex: none;
+  }
+  .chart-head b { font-size: 12.5px; font-weight: 600; }
+  .chart-head .sub { font-size: 11.5px; color: var(--dim); }
+  .chart-body {
+    padding: 2px 12px 12px;
+    flex: 1 1 auto;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    min-height: 158px;
+  }
+  .chart-body > svg { margin: auto; }
+
+  .legend { display: flex; flex-direction: column; gap: 7px; padding: 0 16px 14px; }
+  .legend-row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    color: var(--text-2);
+  }
+  .legend-dot { width: 7px; height: 7px; border-radius: 2px; flex: none; }
+  .legend-row .n { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--muted); }
+  .legend-row .p { width: 42px; text-align: right; color: var(--dim); font-size: 11.5px; font-variant-numeric: tabular-nums; }
+
+  /* ---------- 底部两栏 ---------- */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: stretch; }
+  .two-col > .card { display: flex; flex-direction: column; }
+  .two-col > .card > div:last-child { flex: 1 1 auto; }
+  .list-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 9px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12.5px;
+  }
+  .list-row:last-child { border-bottom: 0; }
+  .list-row .k { color: var(--text); font-weight: 500; }
+  .list-row .s { color: var(--dim); font-size: 11.5px; }
+
+  /* ---------- 卡密网格 ---------- */
+  .key-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(258px, 1fr)); gap: 10px; }
+  .key-card {
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    transition: border-color 0.13s;
+  }
+  .key-card:hover { border-color: var(--border-strong); }
+  .key-card.dead { background: var(--surface-2); }
+  .key-code {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text);
+    word-break: break-all;
+  }
+  .key-meta { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+  .key-acts { display: flex; gap: 5px; margin-top: 9px; flex-wrap: wrap; }
+
+  /* ---------- 画廊 ---------- */
+  /* ---------- 画廊：瀑布流（绝对定位，横向顺序） ---------- */
+  .gal-grid { position: relative; }
+  .gal-more { height: 1px; }
+  .gal-card {
+    position: absolute;
+    top: 0;
+    left: 0;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: var(--surface-3);
+    cursor: zoom-in;
+    line-height: 0;
+    visibility: hidden;            /* 算好位置再显示，免得先全堆在左上角 */
+    transition: border-color 0.13s, transform 0.13s;
+  }
+  .gal-card.placed { visibility: visible; }
+  .gal-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .gal-card img { display: block; width: 100%; height: auto; }
+  .gal-card.broken { display: grid; place-items: center; min-height: 120px; }
+  .gal-card.broken img { display: none; }
+  .gal-card.broken::after {
+    content: "图片已丢失";
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--dim);
+  }
+
+  /* ---------- 详情弹窗：左边图片，右边参数 ---------- */
+  .modal.wide { width: min(1120px, calc(100vw - 48px)); }
+  .dt-split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 16px;
+    padding: 16px;
+  }
+  .dt-stage {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 300px;
+    background: var(--surface-3);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+  .dt-stage img {
+    display: block;
+    max-width: 100%;
+    max-height: calc(100vh - 240px);
+    object-fit: contain;
+  }
+  .dt-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(22, 24, 29, 0.52);
+    color: #fff;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.13s, background 0.13s;
+  }
+  .dt-stage:hover .dt-nav { opacity: 1; }
+  .dt-nav:hover { background: rgba(22, 24, 29, 0.8); }
+  .dt-nav.prev { left: 10px; }
+  .dt-nav.next { right: 10px; }
+  .dt-side { overflow: auto; max-height: calc(100vh - 240px); }
+  .dt-side .kv-grid { grid-template-columns: 1fr; gap: 9px; }
+  @media (max-width: 860px) {
+    .dt-split { grid-template-columns: 1fr; }
+    .dt-side { max-height: none; }
+    .dt-stage img { max-height: 52vh; }
+  }
+
+  /* ---------- 工具条 ---------- */
+  .toolbar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  .toolbar input[type="text"] { max-width: 240px; }
+  .toolbar select { max-width: 150px; }
+  .split { display: grid; grid-template-columns: 320px 1fr; gap: 14px; align-items: start; }
+
+  .kv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .kv-grid .full { grid-column: 1 / -1; }
+  .kv-grid .k { color: var(--dim); font-size: 11.5px; margin-bottom: 1px; }
+  .kv-grid .v { font-size: 12.5px; word-break: break-word; color: var(--text-2); }
+
+  /* ---------- 开关 ---------- */
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 36px;
+    height: 20px;
+    flex: none;
+    vertical-align: middle;
+  }
+  .switch input { position: absolute; opacity: 0; width: 0; height: 0; }
+  .switch span {
+    position: absolute;
+    inset: 0;
+    background: #d5dbe4;
+    border-radius: 999px;
+    transition: background 0.15s;
+    cursor: pointer;
+  }
+  .switch span::before {
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    left: 2px;
+    top: 2px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.15s;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.2);
+  }
+  .switch input:checked + span { background: var(--accent); }
+  .switch input:checked + span::before { transform: translateX(16px); }
+  .switch input:disabled + span { opacity: 0.5; cursor: not-allowed; }
+
+  @media (max-width: 1280px) {
+    .stat-grid { grid-template-columns: repeat(3, 1fr); }
+    .chart-grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 1000px) {
+    .mon-body { grid-template-columns: 1fr; }
+    .mon-cell { border-right: 0; border-bottom: 1px solid var(--border); }
+    .mon-cell:last-child { border-bottom: 0; }
+    .two-col, .split { grid-template-columns: 1fr; }
+    .chart-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 820px) {
+    .admin { grid-template-columns: 1fr; }
+    .sidebar {
+      position: static;
+      height: auto;
+      flex-direction: row;
+      overflow-x: auto;
+      padding: 8px;
+      border-right: 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .side-brand, .nav-label, .side-foot { display: none; }
+    .nav-group { display: flex; margin: 0; }
+    .nav-item { white-space: nowrap; }
+    .nav-badge { display: none; }
+    .content { padding: 14px 14px 44px; }
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  /* ---------- 已选文件 ---------- */
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    max-width: 100%;
+    padding: 3px 5px 3px 9px;
+    border-radius: 999px;
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text-2);
+  }
+  .chip button {
+    border: 0;
+    background: none;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1;
+    padding: 0 3px;
+    cursor: pointer;
+  }
+  .chip button:hover { color: var(--err); }
+</style>
+</head>
+<body>
+<div class="admin">
+  <!-- ================= 侧栏 ================= -->
+  <aside class="sidebar">
+    <div class="side-brand">
+      <div class="brand-mark">Q</div>
+      <div class="brand-text">
+        <b>Qwen Studio</b>
+        <span>图像工坊</span>
+      </div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">总览</div>
+      <div class="nav-item on" data-panel="overview">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        仪表盘
+      </div>
+      <div class="nav-item" data-panel="licenses">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 12a2 2 0 0 1-2 2h-3l-2 3-2-3H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z"/><circle cx="9" cy="9" r="1.2" fill="currentColor" stroke="none"/></svg>
+        卡密<span class="nav-badge" id="badgeLic">0</span>
+      </div>
+      <div class="nav-item" data-panel="gallery">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15l-5-5L5 20"/></svg>
+        画廊<span class="nav-badge" id="badgeGal">0</span>
+      </div>
+      <a class="nav-item" href="/app" style="text-decoration:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M7 17L17 7"/><path d="M9 7h8v8"/></svg>
+        去生图
+      </a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">系统</div>
+      <div class="nav-item" data-panel="accounts">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>
+        账号<span class="nav-badge" id="badgeAcc">0</span>
+      </div>
+      <div class="nav-item" data-panel="proxies">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.4 3.8 5.4 3.8 8.5S14.5 18.1 12 20.5c-2.5-2.4-3.8-5.4-3.8-8.5S9.5 5.9 12 3.5z"/></svg>
+        代理<span class="nav-badge" id="badgePx">0</span>
+      </div>
+      <div class="nav-item" data-panel="channels">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="6" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/><path d="M7 7h.01M7 17h.01"/></svg>
+        渠道<span class="nav-badge" id="badgeCh">0</span>
+      </div>
+    </div>
+
+    <div class="grow"></div>
+
+    <div class="side-foot">
+      <div class="side-link" id="btnPw">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 7 19.4a1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 3 14a1.7 1.7 0 0 0-1.6-1H1a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 3 7a1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 7 3a1.7 1.7 0 0 0 1-1.6V1a2 2 0 1 1 4 0v.1A1.7 1.7 0 0 0 14 3a1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1A1.7 1.7 0 0 0 21 7v.1a1.7 1.7 0 0 0 1.6 1H23a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+        修改口令
+      </div>
+      <div class="side-link" id="btnLogout">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M15 17l5-5-5-5M20 12H9M12 20H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6"/></svg>
+        退出登录
+      </div>
+    </div>
+  </aside>
+
+  <!-- ================= 主区 ================= -->
+  <div class="main">
+    <div class="content">
+
+      <!-- ---------- 概览 ---------- -->
+      <section id="panel-overview">
+        <div class="page-head">
+          <div>
+            <h1>仪表盘</h1>
+            <p id="ovSub">卡密、账号、代理与出图的整体状态</p>
+          </div>
+          <div class="grow"></div>
+          <span class="upd">更新于 <b id="ovTime">--:--</b></span>
+          <button class="icon-btn" id="btnRefresh" title="刷新">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 11a8 8 0 1 0-.6 4"/><path d="M20 4v7h-7"/></svg>
+          </button>
+        </div>
+
+        <!-- 服务监控 -->
+        <div class="card monitor">
+          <div class="mon-head">
+            <span class="tag ok" id="monState">运行中</span>
+            <b style="font-size:13px;font-weight:500">服务监控</b>
+            <div class="grow"></div>
+            <span class="tiny dim" id="monMeta">—</span>
+          </div>
+          <div class="mon-body">
+            <div class="mon-cell">
+              <div class="gauge" id="gauge"></div>
+            </div>
+            <div class="mon-cell">
+              <div class="mini-grid" id="miniGrid"></div>
+            </div>
+            <div class="mon-cell">
+              <div class="spark-head">
+                <b>近 14 天出图</b><span id="sparkSum"></span>
+              </div>
+              <div id="spark"></div>
+            </div>
+          </div>
+          <div class="mon-foot" id="monFoot">—</div>
+        </div>
+
+        <!-- 统计卡 -->
+        <div class="stat-grid" id="ovStats"></div>
+
+        <!-- 图表 -->
+        <div class="chart-grid">
+          <div class="card chart-card">
+            <div class="chart-head">
+              <b>每日出图</b>
+              <span class="sub">近 7 天</span>
+              <div class="grow"></div>
+              <span class="tiny dim" id="trendSum"></span>
+            </div>
+            <div class="chart-body" id="trendChart"></div>
+          </div>
+          <div class="card chart-card">
+            <div class="chart-head"><b>卡密状态</b><div class="grow"></div><span class="sub" id="licTotal"></span></div>
+            <div class="chart-body" id="licDonut"></div>
+            <div class="legend" id="licLegend"></div>
+          </div>
+          <div class="card chart-card">
+            <div class="chart-head"><b>任务构成</b><div class="grow"></div><span class="sub" id="jobTotal"></span></div>
+            <div class="chart-body" id="jobDonut"></div>
+            <div class="legend" id="jobLegend"></div>
+          </div>
+        </div>
+
+        <!-- 底部两栏 -->
+        <div class="two-col">
+          <div class="card">
+            <div class="card-head">
+              <h2>账号池</h2>
+              <div class="grow"></div>
+              <span class="tag" id="accTag">—</span>
+            </div>
+            <div id="accList"></div>
+          </div>
+          <div class="card">
+            <div class="card-head">
+              <h2>代理池</h2>
+              <div class="grow"></div>
+              <span class="tag" id="pxTag">—</span>
+            </div>
+            <div id="pxList"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- 卡密 ---------- -->
+      <section id="panel-licenses" class="hidden">
+        <div class="page-head">
+          <div>
+            <h1>卡密</h1>
+            <p>一张卡密 = 固定次数 + 有效期，生成后可一次性复制发给用户</p>
+          </div>
+        </div>
+
+        <div class="split">
+          <div class="card pad">
+            <h2 style="margin-bottom:14px;font-size:13px">生成卡密</h2>
+            <div class="stack">
+              <div class="field"><label>数量</label><input type="number" id="lcCount" value="1" min="1" max="500" /></div>
+              <div class="field"><label>可用次数（留空 = 不限）</label><input type="number" id="lcQuota" value="10" min="0" placeholder="不限" /></div>
+              <div class="field"><label>有效期天数（留空 = 永久）</label><input type="number" id="lcDays" value="30" min="0" placeholder="永久" /></div>
+              <div class="field"><label>备注（给谁用）</label><input type="text" id="lcNote" placeholder="例如：小王 / 测试" /></div>
+              <button class="btn block" id="btnCreate">生成</button>
+            </div>
+            <div class="note" style="margin-top:12px">
+              次数用尽或到期后自动失效；停用可随时切断某个用户。
+            </div>
+          </div>
+
+          <div>
+            <div class="toolbar">
+              <input type="text" id="lcQ" placeholder="搜卡密 / 备注 / IP" />
+              <select id="lcStatus">
+                <option value="">全部状态</option>
+                <option value="valid">可用</option>
+                <option value="exhausted">次数用尽</option>
+                <option value="expired">已过期</option>
+                <option value="disabled">已停用</option>
+              </select>
+              <div class="grow"></div>
+              <button class="btn ghost sm" id="btnCopyAll">复制全部可用</button>
+              <button class="btn ghost sm" id="btnClearDead">清理失效</button>
+            </div>
+            <div class="key-grid" id="lcGrid"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- 账号 ---------- -->
+      <section id="panel-accounts" class="hidden">
+        <div class="page-head">
+          <div>
+            <h1>账号池</h1>
+            <p>Hugging Face token。配额按账号计，跑满自动换下一个</p>
+          </div>
+          <div class="grow"></div>
+          <select id="strategySel" style="max-width:200px">
+            <option value="proxy_first">先吃匿名额（代理优先）</option>
+            <option value="token_first">先花账号配额</option>
+            <option value="proxy_only">只用匿名代理</option>
+            <option value="token_only">只用账号 Token</option>
+          </select>
+        </div>
+
+        <div class="card pad" style="margin-bottom:14px">
+          <div class="row wrap-row">
+            <input type="text" id="accName" placeholder="备注名（可留空）" style="max-width:190px" />
+            <input type="text" id="accToken" class="mono" placeholder="hf_xxxxxxxxxxxxxxxx" style="flex:1;min-width:230px" />
+            <input type="text" id="accProxy" class="mono" placeholder="出口代理（可留空）" style="max-width:210px" />
+            <button class="btn sm" id="btnAddAcc">添加</button>
+            <button class="btn ghost sm" id="btnReloadAcc">重读 tokens.txt</button>
+            <button class="btn ghost sm" id="btnClearAccCd">清冷却</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="table-wrap"><table>
+            <thead><tr><th>名称</th><th>Token</th><th>出口</th><th>状态</th><th>成功 / 失败</th><th></th></tr></thead>
+            <tbody id="accRows"></tbody>
+          </table></div>
+        </div>
+      </section>
+
+      <!-- ---------- 代理 ---------- -->
+      <section id="panel-proxies" class="hidden">
+        <div class="page-head">
+          <div>
+            <h1>代理池</h1>
+            <p>匿名额按出口 IP 计。一个代理 = 一份独立额度，不花 token</p>
+          </div>
+          <div class="grow"></div>
+          <button class="btn ghost sm" id="btnTestAll">测试前 50 个出口</button>
+          <button class="btn ghost sm" id="btnReloadPx">重读 proxies.txt</button>
+          <button class="btn ghost sm" id="btnClearPxCd">清冷却</button>
+          <button class="btn danger sm" id="btnPurgePx">清理过期</button>
+        </div>
+
+        <div class="toolbar">
+          <input type="text" id="pxQ" placeholder="搜名称 / 地址 / 备注" />
+          <span class="small dim" id="pxCount"></span>
+        </div>
+
+        <div class="split">
+          <div class="card pad">
+            <h2 style="margin-bottom:12px;font-size:13px">批量导入</h2>
+            <div class="stack">
+              <div class="field">
+                <label>这一批的到期天数（留空 = 永久）</label>
+                <input type="number" id="pxDays" min="1" placeholder="例如 30" />
+              </div>
+
+              <div class="field">
+                <label>从文件导入（可多选）</label>
+                <button class="btn ghost block" id="btnPickPx" type="button">选择文件…</button>
+                <input type="file" id="pxFiles" multiple accept=".txt,.csv,.list,.lst,text/plain" class="hidden" />
+                <div class="chips" id="pxFileList" style="margin-top:8px"><span class="small dim">还没选文件</span></div>
+                <div class="tiny dim" style="margin-top:6px">选中的文件不会立刻导入，点下面的「导入」才提交</div>
+              </div>
+
+              <textarea id="pxBulk" class="mono" placeholder="也可以直接粘贴，一行一个，这些格式都认：
+http://user:pass@1.2.3.4:8080
+1.2.3.4:8080:user:pass
+1.2.3.4,8080,user,pass
+1.2.3.4:8080
+香港|http://user:pass@1.2.3.4:8080|住宅IP|2026-12-31"></textarea>
+              <div class="row">
+                <button class="btn block" id="btnImportPx">导入</button>
+                <button class="btn ghost block" id="btnImportTest">导入并测试</button>
+              </div>
+              <div id="pxMsg" class="small" style="min-height:17px"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="table-wrap"><table>
+              <thead><tr><th>名称</th><th>代理</th><th>状态</th><th>到期</th><th>出口</th><th></th></tr></thead>
+              <tbody id="pxRows"></tbody>
+            </table></div>
+            <div class="row" style="padding:10px 14px;border-top:1px solid var(--border)">
+              <span class="small dim" id="pxPageInfo">—</span>
+              <div class="grow"></div>
+              <button class="btn ghost sm" id="pxPrev">上一页</button>
+              <button class="btn ghost sm" id="pxNext">下一页</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- 渠道 ---------- -->
+      <section id="panel-channels" class="hidden">
+        <div class="page-head">
+          <div>
+            <h1>渠道</h1>
+            <p>一个 Space 一个独立队列。关掉的渠道不会再被派任务，改完立即生效</p>
+          </div>
+          <div class="grow"></div>
+          <button class="btn ghost sm" id="btnProbeAll">探测全部</button>
+        </div>
+
+        <div class="card pad" style="margin-bottom:12px">
+          <div class="row wrap-row">
+            <input type="text" id="chSpace" class="mono" placeholder="owner/name" style="flex:1;min-width:240px" />
+            <input type="text" id="chNote" placeholder="备注（可留空）" style="max-width:170px" />
+            <button class="btn sm" id="btnAddCh">添加</button>
+          </div>
+          <div class="note" style="margin-top:10px">
+            只接受<b>参数签名一致</b>的 Space。加之前先「测试」确认兼容性，不兼容的加进来也用不了。
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="table-wrap"><table>
+            <thead><tr><th>渠道</th><th>状态</th><th>兼容性</th><th>启用</th><th></th></tr></thead>
+            <tbody id="chRows"></tbody>
+          </table></div>
+          <div class="row" style="padding:10px 14px;border-top:1px solid var(--border)">
+            <span class="small dim" id="chActive">—</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- 画廊 ---------- -->
+      <section id="panel-gallery" class="hidden">
+        <div class="page-head">
+          <div>
+            <h1>画廊</h1>
+            <p>点任意一张看大图与参数，左右键翻页</p>
+          </div>
+          <div class="grow"></div>
+          <button class="btn ghost sm" id="btnScanGal">扫描 outputs</button>
+          <button class="btn danger sm" id="btnClearGal">清空索引</button>
+        </div>
+
+        <div class="toolbar">
+          <input type="text" id="galQ" placeholder="搜提示词 / 种子 / 卡密" />
+          <select id="galMode"><option value="">全部模式</option></select>
+        </div>
+        <div class="gal-grid" id="galGrid"></div>
+        <div class="gal-more" id="galMore"></div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<!-- 弹窗 -->
+<div class="backdrop" id="backdrop"></div>
+
+<div class="modal wide" id="modalDetail">
+  <header>
+    <h2>生成详情</h2>
+    <span class="tag" id="dtPos">—</span>
+    <div class="grow"></div>
+    <button class="icon-btn" data-close>×</button>
+  </header>
+  <div class="dt-split">
+    <div class="dt-stage">
+      <img id="dtImg" alt="" />
+      <button class="dt-nav prev" id="dtPrev" title="上一张（←）">‹</button>
+      <button class="dt-nav next" id="dtNext" title="下一张（→）">›</button>
+    </div>
+    <div class="dt-side"><div class="kv-grid" id="dtBody"></div></div>
+  </div>
+  <footer>
+    <span class="small dim" style="margin-right:auto">← → 翻页 · Esc 关闭</span>
+    <button class="btn ghost sm" id="dtCopy">复制提示词</button>
+    <button class="btn ghost sm" id="dtOpen">打开原图</button>
+    <button class="btn danger sm" id="dtDel">删除</button>
+  </footer>
+</div>
+
+<div class="modal" id="modalKeys">
+  <header><h2>已生成卡密</h2><div class="grow"></div><button class="icon-btn" data-close>×</button></header>
+  <div class="modal-body">
+    <p class="muted small" style="margin-top:0">把下面这段发给用户即可（每行一张）：</p>
+    <textarea id="keysOut" class="mono" style="min-height:180px"></textarea>
+  </div>
+  <footer>
+    <button class="btn ghost sm" data-close>关闭</button>
+    <button class="btn sm" id="keysCopy">复制全部</button>
+  </footer>
+</div>
+
+<div class="modal" id="modalPw">
+  <header><h2>修改管理员口令</h2><div class="grow"></div><button class="icon-btn" data-close>×</button></header>
+  <div class="modal-body">
+    <div class="stack">
+      <div class="field"><label>当前口令</label><input type="password" id="pwOld" /></div>
+      <div class="field"><label>新口令（至少 6 位）</label><input type="password" id="pwNew" /></div>
+      <div class="field"><label>再输一次</label><input type="password" id="pwNew2" /></div>
+      <div class="small" id="pwMsg" style="min-height:17px"></div>
+    </div>
+  </div>
+  <footer>
+    <button class="btn ghost sm" data-close>取消</button>
+    <button class="btn sm" id="pwSave">保存</button>
+  </footer>
+</div>
+
+<div class="toast-host" id="toasts"></div>
+
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+/* ---------- 基础设施 ---------- */
+async function api(path, opts = {}) {
+  const r = await fetch(path, opts);
+  if (r.status === 401) { location.href = "/login"; throw new Error("未登录"); }
+  const txt = await r.text();
+  let data = null;
+  try { data = txt ? JSON.parse(txt) : null; } catch { data = { detail: txt }; }
+  if (!r.ok) throw new Error((data && data.detail) || `HTTP ${r.status}`);
+  return data;
+}
+const post = (p, body) => api(p, {
+  method: "POST", headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(body ?? {}),
+});
+const del = (p) => api(p, { method: "DELETE" });
+
+function toast(msg, bad) {
+  const el = document.createElement("div");
+  el.className = "toast " + (bad ? "err" : "ok");
+  el.textContent = msg;
+  $("toasts").appendChild(el);
+  setTimeout(() => el.remove(), 3400);
+}
+const fail = (e) => toast(e.message || String(e), true);
+
+function fmtTime(iso) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (isNaN(d)) return "—";
+  return d.toLocaleString("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+}
+function daysLeft(iso) {
+  if (!iso) return null;
+  const ms = new Date(iso) - Date.now();
+  return ms <= 0 ? 0 : Math.ceil(ms / 86400000);
+}
+function copy(text) {
+  navigator.clipboard?.writeText(text).then(
+    () => toast("已复制"), () => toast("复制失败，请手动选中", true));
+}
+
+/* ---------- SVG 图表 ---------- */
+const C = {
+  ok: "#10b981", blue: "#3b82f6", cyan: "#06b6d4",
+  warn: "#f59e0b", err: "#ef4444", gray: "#9ca3af", line: "#edf0f3",
+};
+
+function donut(segments, size = 156) {
+  const total = segments.reduce((a, s) => a + s.value, 0);
+  const r = 56, cx = size / 2, cy = size / 2, c = 2 * Math.PI * r;
+  let acc = 0;
+  const rings = segments.filter((s) => s.value > 0).map((s) => {
+    const len = (c * s.value) / (total || 1);
+    const off = -acc;
+    acc += len;
+    return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${s.color}"
+      stroke-width="17" stroke-dasharray="${len.toFixed(2)} ${(c - len).toFixed(2)}"
+      stroke-dashoffset="${off.toFixed(2)}" transform="rotate(-90 ${cx} ${cy})"/>`;
+  }).join("");
+  const base = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none"
+    stroke="${C.line}" stroke-width="17"/>`;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+    ${base}${rings}
+    <text x="${cx}" y="${cy + 1}" text-anchor="middle" font-size="22" font-weight="600"
+      fill="#16181d">${total}</text>
+    <text x="${cx}" y="${cy + 18}" text-anchor="middle" font-size="10.5"
+      fill="#a8aeb8">总计</text>
+  </svg>`;
+}
+
+/* 柱子用 SVG（矩形拉伸无妨），刻度用 HTML —— 避免 preserveAspectRatio 把字压扁 */
+function bars(values, labels, { height = 132, color = C.blue, fill = "#eef4fe" } = {}) {
+  const w = 320, h = height;
+  const total = values.reduce((a, b) => a + b, 0);
+  const max = Math.max(1, ...values);
+  const n = values.length || 1;
+  const bw = Math.max(3, w / n - 5);
+
+  const rects = values.map((v, i) => {
+    const bh = v > 0 ? Math.max(3, (v / max) * (h - 8)) : 0;
+    const x = i * (w / n) + (w / n - bw) / 2;
+    return `<rect x="${x.toFixed(1)}" y="${(h - bh).toFixed(1)}" width="${bw.toFixed(1)}"
+      height="${bh.toFixed(1)}" rx="2" fill="${v > 0 ? color : fill}"/>`;
+  }).join("");
+
+  const axis = `<div style="display:flex;width:100%;margin-top:5px">${labels
+    .map((l) => `<span style="flex:1;text-align:center;font-size:9.5px;color:#a8aeb8;white-space:nowrap">${esc(l)}</span>`)
+    .join("")}</div>`;
+
+  if (!total) {
+    return `<div style="width:100%;height:100%;display:flex;flex-direction:column">
+      <div style="flex:1 1 auto;min-height:60px;display:grid;place-items:center;border-bottom:1px solid ${C.line}">
+        <span style="font-size:11.5px;color:#a8aeb8">暂无数据</span>
+      </div>${axis}</div>`;
+  }
+  return `<div style="width:100%;height:100%;display:flex;flex-direction:column">
+    <div style="flex:1 1 auto;min-height:60px">
+      <svg viewBox="0 0 ${w} ${h}" width="100%" height="100%" preserveAspectRatio="none">
+        ${rects}</svg>
+    </div>${axis}</div>`;
+}
+
+function gaugeSvg(pct, size = 124) {
+  const r = 50, cx = size / 2, cy = size / 2, c = 2 * Math.PI * r;
+  const len = (c * Math.min(1, Math.max(0, pct))) / 100;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${C.line}" stroke-width="9"/>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${C.ok}" stroke-width="9"
+      stroke-linecap="round" stroke-dasharray="${len.toFixed(2)} ${(c - len).toFixed(2)}"/>
+  </svg>`;
+}
+
+/* ---------- 导航 ---------- */
+const PANELS = ["overview", "licenses", "accounts", "proxies", "channels", "gallery"];
+let current = "overview";
+
+function show(panel, { updateHash = true } = {}) {
+  current = panel;
+  PANELS.forEach((p) => $("panel-" + p).classList.toggle("hidden", p !== panel));
+  document.querySelectorAll(".nav-item").forEach((n) =>
+    n.classList.toggle("on", n.dataset.panel === panel));
+  if (updateHash) history.replaceState(null, "", "#" + panel);
+  ({ overview: loadOverview, licenses: loadLicenses, accounts: loadAccounts,
+     proxies: loadProxies, channels: loadChannels, gallery: loadGallery })[panel]?.();
+}
+
+window.addEventListener("hashchange", () => {
+  const p = location.hash.slice(1);
+  if (PANELS.includes(p) && p !== current) show(p, { updateHash: false });
+});
+document.querySelectorAll(".nav-item").forEach((n) => { n.onclick = () => show(n.dataset.panel); });
+
+/* ---------- 弹窗 ---------- */
+function openModal(id) { $(id).classList.add("on"); $("backdrop").classList.add("on"); }
+function closeModals() {
+  document.querySelectorAll(".modal").forEach((m) => m.classList.remove("on"));
+  $("backdrop").classList.remove("on");
+}
+$("backdrop").onclick = closeModals;
+document.querySelectorAll("[data-close]").forEach((b) => (b.onclick = closeModals));
+
+/* ==========================================================================
+   概览
+   ========================================================================== */
+async function loadOverview() {
+  try {
+    const [ov, hist] = await Promise.all([api("/api/overview"), api("/api/history?limit=80")]);
+    const L = ov.licenses, P = ov.pool, X = ov.proxy, J = ov.jobs || {};
+
+    $("ovTime").textContent = new Date().toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" });
+    $("ovSub").textContent =
+      `策略 ${P.strategy} · 可尝试路线 ${P.routes_available}` +
+      (ov.auth.no_auth ? " · 鉴权已关闭" : "");
+
+    $("badgeLic").textContent = L.total;
+    $("badgeAcc").textContent = P.total;
+    $("badgePx").textContent = X.total;
+    $("badgeGal").textContent = ov.gallery.total;
+
+    /* 监控大卡 */
+    const usable = P.routes_available > 0;
+    $("monState").className = "tag " + (usable ? "ok" : "err");
+    $("monState").textContent = usable ? "运行中" : "无可用路线";
+    $("monMeta").textContent =
+      `渠道 ${(ov.space.active || []).length}/${ov.space.channels || 0} 启用 · ` +
+      `${ov.space.src_mode === "url" ? "直连 hf.space" : "经 huggingface.co"}`;
+    $("monFoot").textContent =
+      `指纹模式 ${ov.fingerprint ? ov.fingerprint.mode : "—"} · ` +
+      `${ov.fingerprint ? ov.fingerprint.count : 0} 套配置 · ` +
+      `账号 ${P.usable}/${P.total} 可用 · 代理 ${X.usable}/${X.total} 可用` +
+      (X.expired ? ` · ${X.expired} 个已过期` : "");
+
+    const routePct = P.total + X.total > 0 ? (P.routes_available / (P.total + X.total)) * 100 : 0;
+    $("gauge").innerHTML = gaugeSvg(routePct) +
+      `<div class="gauge-val"><b>${P.routes_available}</b><span>可用路线</span></div>`;
+
+    $("miniGrid").innerHTML = [
+      ["账号", P.usable, `共 ${P.total} 个`],
+      ["代理", X.usable, `共 ${X.total} 个`],
+      ["卡密", L.valid, `共 ${L.total} 张`],
+      ["作品", ov.gallery.total, "画廊记录"],
+    ].map(([k, v, s]) => `
+      <div class="mini">
+        <div class="mini-k">${esc(k)}</div>
+        <div class="mini-v">${esc(v)}</div>
+        <div class="mini-s">${esc(s)}</div>
+      </div>`).join("");
+
+    // 近 14 天出图
+    const jobs = hist.jobs || [];
+    const days = [];
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      days.push({ key: d.toISOString().slice(0, 10), label: `${d.getMonth() + 1}/${d.getDate()}` });
+    }
+    const byDay = {};
+    jobs.forEach((j) => {
+      if (j.status !== "done") return;
+      const k = (j.created || "").slice(0, 10);
+      byDay[k] = (byDay[k] || 0) + 1;
+    });
+    const sparkVals = days.map((d) => byDay[d.key] || 0);
+    const sparkSum = sparkVals.reduce((a, b) => a + b, 0);
+    $("sparkSum").textContent = sparkSum ? `共 ${sparkSum} 张` : "";
+    $("spark").innerHTML = bars(sparkVals, days.map((d, i) => (i % 2 === 0 ? d.label : "")));
+
+    /* 统计卡 */
+    const stats = [
+      ["卡密总数", L.total, `其中不限次 ${L.unlimited} 张`, "tag"],
+      ["可用卡密", L.valid, `已用 ${L.used_total} 次`, "check"],
+      ["已失效", L.expired + L.exhausted + L.disabled,
+        `过期 ${L.expired} · 用尽 ${L.exhausted} · 停用 ${L.disabled}`, "x"],
+      ["账号", P.total, `可用 ${P.usable} · 冷却 ${P.cooling}`, "user"],
+      ["代理", X.total,
+        `可用 ${X.usable} · 冷却 ${X.cooling}` + (X.expired ? ` · 过期 ${X.expired}` : ""), "globe"],
+      ["作品", ov.gallery.total, `任务 ${J.total ?? 0} · 失败 ${J.error ?? 0}`, "img"],
+    ];
+    const icons = {
+      tag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 12a2 2 0 0 1-2 2h-3l-2 3-2-3H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z"/></svg>',
+      check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 12.2l2.4 2.4 4.6-4.8"/></svg>',
+      x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M9 9l6 6M15 9l-6 6"/></svg>',
+      user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>',
+      globe: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.4 3.8 5.4 3.8 8.5S14.5 18.1 12 20.5c-2.5-2.4-3.8-5.4-3.8-8.5S9.5 5.9 12 3.5z"/></svg>',
+      img: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15l-5-5L5 20"/></svg>',
+    };
+    $("ovStats").innerHTML = stats.map(([k, v, s, ic]) => `
+      <div class="stat">
+        <div class="stat-top">${esc(k)}${icons[ic] || ""}</div>
+        <div class="stat-v">${esc(v)}</div>
+        <div class="stat-s">${esc(s)}</div>
+      </div>`).join("");
+
+    /* 每日出图（近 7 天） */
+    const d7 = days.slice(-7);
+    const v7 = d7.map((d) => byDay[d.key] || 0);
+    $("trendSum").textContent = `共 ${v7.reduce((a, b) => a + b, 0)} 张`;
+    $("trendChart").innerHTML = bars(v7, d7.map((d) => d.label), { height: 150, color: C.blue });
+
+    /* 卡密状态环形 */
+    const licSeg = [
+      { label: "可用", value: L.valid, color: C.ok },
+      { label: "次数用尽", value: L.exhausted, color: C.warn },
+      { label: "已过期", value: L.expired, color: C.err },
+      { label: "已停用", value: L.disabled, color: C.gray },
+    ];
+    $("licTotal").textContent = `${L.total} 张`;
+    $("licDonut").innerHTML = donut(licSeg);
+    $("licLegend").innerHTML = licSeg.map((s) => {
+      const pct = L.total ? ((s.value / L.total) * 100).toFixed(1) : "0.0";
+      return `<div class="legend-row">
+        <span class="legend-dot" style="background:${s.color}"></span>
+        ${esc(s.label)}<span class="n">${s.value}</span><span class="p">${pct}%</span>
+      </div>`;
+    }).join("");
+
+    /* 任务构成环形 */
+    const jobSeg = [
+      { label: "完成", value: J.done || 0, color: C.ok },
+      { label: "失败", value: J.error || 0, color: C.err },
+      { label: "进行中", value: (J.running || 0) + (J.queued || 0), color: C.blue },
+      { label: "已取消", value: J.cancelled || 0, color: C.gray },
+    ];
+    const jTotal = jobSeg.reduce((a, s) => a + s.value, 0);
+    $("jobTotal").textContent = `${jTotal} 个`;
+    $("jobDonut").innerHTML = donut(jobSeg);
+    $("jobLegend").innerHTML = jobSeg.map((s) => {
+      const pct = jTotal ? ((s.value / jTotal) * 100).toFixed(1) : "0.0";
+      return `<div class="legend-row">
+        <span class="legend-dot" style="background:${s.color}"></span>
+        ${esc(s.label)}<span class="n">${s.value}</span><span class="p">${pct}%</span>
+      </div>`;
+    }).join("");
+
+    /* 底部两栏 */
+    const pool = await api("/api/pool");
+    $("accTag").textContent = `${pool.usable}/${pool.total} 可用`;
+    $("accTag").className = "tag " + (pool.usable ? "ok" : "err");
+    $("accList").innerHTML = pool.accounts.length
+      ? pool.accounts.slice(0, 5).map((a) => `
+        <div class="list-row">
+          <span class="dot ${a.available ? "ok" : "err"}"></span>
+          <span class="k">${esc(a.name)}</span>
+          <span class="s mono">${esc(a.masked)}</span>
+          <div class="grow"></div>
+          <span class="s">${a.available ? "可用" : `冷却 ${Math.round(a.cooldown_left / 60)} 分`}</span>
+        </div>`).join("")
+      : `<div class="empty"><b>账号池是空的</b>去「账号」页添加 token</div>`;
+
+    const px = await api("/api/proxy?limit=5");
+    $("pxTag").textContent = `${px.usable}/${px.total} 可用` + (px.expired ? ` · 过期 ${px.expired}` : "");
+    $("pxTag").className = "tag " + (px.expired ? "warn" : px.usable ? "ok" : "err");
+    $("pxList").innerHTML = (px.proxies || []).length
+      ? px.proxies.map((x) => `
+        <div class="list-row">
+          <span class="dot ${x.expired ? "err" : x.available ? "ok" : "warn"}"></span>
+          <span class="k">${esc(x.label)}</span>
+          <span class="s mono truncate" style="max-width:200px">${esc(x.url)}</span>
+          <div class="grow"></div>
+          <span class="s">${x.expired ? "已过期" : x.egress_ip ? esc(x.egress_ip) : "未测"}</span>
+        </div>`).join("")
+      : `<div class="empty"><b>代理池是空的</b>去「代理」页导入</div>`;
+  } catch (e) { fail(e); }
+}
+
+/* ==========================================================================
+   卡密
+   ========================================================================== */
+let licCache = [];
+
+async function loadLicenses() {
+  try {
+    const q = encodeURIComponent($("lcQ").value.trim());
+    const st = $("lcStatus").value;
+    const r = await api(`/api/licenses?q=${q}&status=${st}&limit=500`);
+    licCache = r.items;
+    $("badgeLic").textContent = r.stats.total;
+
+    $("lcGrid").innerHTML = licCache.length ? licCache.map((x) => {
+      const dead = x.status !== "valid";
+      const left = daysLeft(x.expires);
+      const tags = [
+        x.quota === null ? `<span class="tag accent">不限次数</span>`
+          : `<span class="tag">剩 ${x.remaining} / ${x.quota}</span>`,
+        x.expires
+          ? `<span class="tag ${left === 0 ? "err" : left <= 3 ? "warn" : ""}">${left === 0 ? "已过期" : left + " 天后到期"}</span>`
+          : `<span class="tag">永久</span>`,
+        `<span class="tag ${x.status === "valid" ? "ok" : "err"}">${esc(x.status_cn)}</span>`,
+      ].join("");
+      return `<div class="key-card ${dead ? "dead" : ""}">
+        <div class="key-code">${esc(x.key)}</div>
+        <div class="tiny dim" style="margin-top:2px">${esc(x.note || "无备注")}</div>
+        <div class="key-meta">${tags}</div>
+        <div class="key-acts">
+          <button class="btn ghost sm" data-copy="${esc(x.key)}">复制</button>
+          <button class="btn ghost sm" data-toggle="${esc(x.key)}" data-dis="${x.disabled ? 1 : 0}">${x.disabled ? "启用" : "停用"}</button>
+          <button class="btn ghost sm" data-reset="${esc(x.key)}">重置</button>
+          <button class="btn danger sm" data-del="${esc(x.key)}">删除</button>
+        </div>
+      </div>`;
+    }).join("") : `<div class="empty" style="grid-column:1/-1"><b>还没有卡密</b>左边生成几张</div>`;
+
+    const g = $("lcGrid");
+    g.querySelectorAll("[data-copy]").forEach((b) => (b.onclick = () => copy(b.dataset.copy)));
+    g.querySelectorAll("[data-toggle]").forEach((b) => (b.onclick = async () => {
+      try {
+        await post("/api/licenses/disable", { key: b.dataset.toggle, disabled: b.dataset.dis !== "1" });
+        loadLicenses();
+      } catch (e) { fail(e); }
+    }));
+    g.querySelectorAll("[data-reset]").forEach((b) => (b.onclick = async () => {
+      try { await post("/api/licenses/reset", { key: b.dataset.reset }); toast("次数已重置"); loadLicenses(); }
+      catch (e) { fail(e); }
+    }));
+    g.querySelectorAll("[data-del]").forEach((b) => (b.onclick = async () => {
+      if (!confirm("删除这张卡密？用户会立刻失效。")) return;
+      try { await del("/api/licenses/" + encodeURIComponent(b.dataset.del)); toast("已删除"); loadLicenses(); }
+      catch (e) { fail(e); }
+    }));
+  } catch (e) { fail(e); }
+}
+
+$("btnCreate").onclick = async () => {
+  const count = parseInt($("lcCount").value || "1", 10);
+  const q = $("lcQuota").value.trim();
+  const d = $("lcDays").value.trim();
+  try {
+    const r = await post("/api/licenses/create", {
+      count,
+      quota: q === "" ? null : parseInt(q, 10),
+      days: d === "" ? null : parseInt(d, 10),
+      note: $("lcNote").value.trim(),
+    });
+    $("keysOut").value = r.created.map((x) => x.key).join("\n");
+    openModal("modalKeys");
+    toast(`已生成 ${r.count} 张`);
+    loadLicenses();
+  } catch (e) { fail(e); }
+};
+
+$("keysCopy").onclick = () => copy($("keysOut").value);
+
+$("btnCopyAll").onclick = () => {
+  const valid = licCache.filter((x) => x.status === "valid").map((x) => x.key);
+  if (!valid.length) return toast("没有可用卡密", true);
+  copy(valid.join("\n"));
+};
+
+$("btnClearDead").onclick = async () => {
+  if (!confirm("清理所有已过期 / 次数用尽 / 已停用的卡密？")) return;
+  try { const r = await post("/api/licenses/clear?only_invalid=true"); toast(`清理 ${r.removed} 张`); loadLicenses(); }
+  catch (e) { fail(e); }
+};
+
+$("lcQ").oninput = (() => { let t; return () => { clearTimeout(t); t = setTimeout(loadLicenses, 250); }; })();
+$("lcStatus").onchange = loadLicenses;
+
+/* ==========================================================================
+   账号
+   ========================================================================== */
+async function loadAccounts() {
+  try {
+    const p = await api("/api/pool");
+    $("badgeAcc").textContent = p.total;
+    $("badgePx").textContent = (p.proxy || {}).total || 0;
+    $("strategySel").value = p.strategy;
+    $("accRows").innerHTML = p.accounts.length ? p.accounts.map((a) => `
+      <tr>
+        <td>${esc(a.name)}${a.note ? `<div class="tiny dim">${esc(a.note)}</div>` : ""}</td>
+        <td class="mono tiny">${esc(a.masked)}</td>
+        <td class="mono tiny">${esc(a.proxy || "直连")}</td>
+        <td>${a.available ? '<span class="tag ok">可用</span>'
+          : `<span class="tag err">冷却 ${Math.round(a.cooldown_left / 60)} 分</span>`}
+          ${a.last_error ? `<div class="tiny dim truncate" style="max-width:210px">${esc(a.last_error.slice(0, 44))}</div>` : ""}</td>
+        <td class="num">${a.success} / ${a.failure}</td>
+        <td><button class="btn danger sm" data-delacc="${esc(a.name)}">移除</button></td>
+      </tr>`).join("") : `<tr><td colspan="6" class="empty">账号池是空的</td></tr>`;
+
+    $("accRows").querySelectorAll("[data-delacc]").forEach((b) => (b.onclick = async () => {
+      if (!confirm("移除这个账号？")) return;
+      try { await post("/api/pool/remove", { name: b.dataset.delacc }); loadAccounts(); }
+      catch (e) { fail(e); }
+    }));
+  } catch (e) { fail(e); }
+}
+
+$("btnAddAcc").onclick = async () => {
+  const token = $("accToken").value.trim();
+  if (!token) return toast("请填 token", true);
+  try {
+    await post("/api/pool/add", {
+      name: $("accName").value.trim(), token,
+      note: $("accProxy").value.trim() ? "出口 " + $("accProxy").value.trim() : "",
+    });
+    $("accToken").value = ""; $("accName").value = ""; $("accProxy").value = "";
+    toast("已添加"); loadAccounts();
+  } catch (e) { fail(e); }
+};
+$("btnReloadAcc").onclick = async () => {
+  try { await post("/api/pool/reload"); toast("已重读 tokens.txt"); loadAccounts(); } catch (e) { fail(e); }
+};
+$("btnClearAccCd").onclick = async () => {
+  try { await post("/api/pool/clear_cooldown"); toast("冷却已清除"); loadAccounts(); } catch (e) { fail(e); }
+};
+$("strategySel").onchange = async () => {
+  try { await post("/api/pool/strategy", { strategy: $("strategySel").value }); toast("策略已切换"); }
+  catch (e) { fail(e); }
+};
+
+/* ==========================================================================
+   代理
+   ========================================================================== */
+let pxOffset = 0;
+const PX_PAGE = 100;
+
+async function loadProxies() {
+  try {
+    const q = encodeURIComponent($("pxQ").value.trim());
+    const p = await api(`/api/proxy?limit=${PX_PAGE}&offset=${pxOffset}&q=${q}`);
+    $("badgePx").textContent = p.total;
+    $("pxCount").textContent = p.q
+      ? `匹配 ${p.total} 个（可用 ${p.usable} · 过期 ${p.expired}）`
+      : "";
+
+    $("pxPageInfo").textContent = p.total
+      ? `${pxOffset + 1}–${pxOffset + (p.proxies || []).length} / 共 ${p.total} 个`
+      : "代理池是空的";
+    $("pxPrev").disabled = pxOffset <= 0;
+    $("pxNext").disabled = pxOffset + PX_PAGE >= p.total;
+
+    $("pxRows").innerHTML = (p.proxies || []).length ? p.proxies.map((x) => {
+      const st = x.expired
+        ? '<span class="tag err">已过期</span>'
+        : x.available
+          ? '<span class="tag ok">可用</span>'
+          : `<span class="tag warn">冷却 ${Math.round(x.cooldown_left / 60)} 分</span>`;
+      const exp = x.expires
+        ? `<span class="${x.expired ? "err" : x.expires_in <= 3 ? "warn" : "dim"}">${
+            x.expired ? "已过期" : x.expires_in + " 天后"}</span>
+           <div class="tiny dim">${esc(String(x.expires).slice(0, 10))}</div>`
+        : '<span class="dim">永久</span>';
+      return `<tr>
+        <td>${esc(x.label)}${x.note ? `<div class="tiny dim">${esc(x.note)}</div>` : ""}</td>
+        <td class="mono tiny" style="word-break:break-all;max-width:250px">${esc(x.url)}</td>
+        <td>${st}${x.last_error ? `<div class="tiny dim truncate" style="max-width:180px">${esc(x.last_error.slice(0, 36))}</div>` : ""}</td>
+        <td class="tiny">${exp}</td>
+        <td class="tiny">${x.egress_ip
+          ? `<span class="mono">${esc(x.egress_ip)}</span><div class="dim">${Math.round(x.latency_ms)}ms</div>`
+          : '<span class="dim">未测</span>'}</td>
+        <td class="nowrap">
+          <button class="btn ghost sm" data-testpx="${esc(x.url)}">测试</button>
+          <button class="btn danger sm" data-delpx="${esc(x.url)}">删除</button>
+        </td>
+      </tr>`;
+    }).join("") : `<tr><td colspan="6" class="empty">代理池是空的</td></tr>`;
+
+    $("pxRows").querySelectorAll("[data-testpx]").forEach((b) => (b.onclick = async () => {
+      toast("测试中…");
+      try {
+        const r = await post("/api/proxy/test", { url: b.dataset.testpx });
+        const x = (r.results || [])[0];
+        toast(x && x.ok ? `出口 ${x.egress_ip} / ${Math.round(x.latency_ms)}ms` : "测试失败：" + (x ? x.error : ""), !x || !x.ok);
+        loadProxies();
+      } catch (e) { fail(e); }
+    }));
+    $("pxRows").querySelectorAll("[data-delpx]").forEach((b) => (b.onclick = async () => {
+      if (!confirm("删除这个代理？")) return;
+      try { await post("/api/proxy/remove", { url: b.dataset.delpx }); loadProxies(); }
+      catch (e) { fail(e); }
+    }));
+  } catch (e) { fail(e); }
+}
+
+/* 选中的文件先攒在 PX_PICKED 里，点「导入」才真正提交 ——
+   这样能先把到期天数填完，不会一选文件就往池子里写。 */
+const PX_PICKED = [];
+
+function proxyDays() {
+  const raw = $("pxDays").value.trim();
+  return raw === "" ? null : parseInt(raw, 10);
+}
+
+function renderPickedFiles() {
+  const box = $("pxFileList");
+  if (!PX_PICKED.length) {
+    box.innerHTML = '<span class="small dim">还没选文件</span>';
+    return;
+  }
+  box.innerHTML = PX_PICKED.map((f, i) =>
+    `<span class="chip">${esc(f.name)}<button type="button" data-i="${i}" title="移除">×</button></span>`
+  ).join("");
+  box.querySelectorAll("button").forEach((b) => {
+    b.onclick = () => { PX_PICKED.splice(parseInt(b.dataset.i, 10), 1); renderPickedFiles(); };
+  });
+}
+
+function addPickedFiles(files) {
+  for (const f of Array.from(files || [])) {
+    if (!PX_PICKED.some((x) => x.name === f.name && x.size === f.size)) PX_PICKED.push(f);
+  }
+  renderPickedFiles();
+}
+
+function mergeImport(acc, r) {
+  acc.added_count += r.added_count || 0;
+  acc.skipped.push(...(r.skipped || []));
+  acc.invalid.push(...(r.invalid || []));
+  acc.sources.push(...(r.sources || []));
+  acc.notes.push(...(r.notes || []));
+}
+
+function showImportResult(r) {
+  const bits = [`新增 ${r.added_count}`];
+  if (r.skipped.length) bits.push(`重复 ${r.skipped.length}`);
+  if (r.invalid.length) bits.push(`无效 ${r.invalid.length} 行`);
+  if (r.sources.length) bits.push(`${r.sources.length} 个文件`);
+  bits.push(r.days ? `${r.days} 天后到期` : "永久有效");
+
+  const lines = [];
+  if (r.invalid.length) {
+    lines.push("无效行：" + r.invalid.slice(0, 3).map((x) => `第${x.line}行 ${x.raw}`).join("；"));
+  }
+  if (r.notes.length) lines.push(r.notes.slice(0, 3).join("；"));
+  $("pxMsg").textContent = lines.join(" · ");
+  $("pxMsg").style.color = lines.length ? "var(--warn)" : "var(--ok)";
+  toast(bits.join(" · "), r.invalid.length > 0);
+  loadProxies();
+}
+
+/* 选中的文件 + 粘贴的文本一起导入，两者都有就都导 */
+async function importProxies(testAfter) {
+  const files = PX_PICKED.slice();
+  const text = $("pxBulk").value.trim();
+  if (!files.length && !text) return toast("先选择文件，或粘贴代理列表", true);
+
+  const days = proxyDays();
+  const acc = { added_count: 0, skipped: [], invalid: [], sources: [], notes: [], days };
+  try {
+    if (files.length) {
+      const fd = new FormData();
+      for (const f of files) fd.append("files", f);
+      if (days !== null) fd.append("days", String(days));
+      mergeImport(acc, await api("/api/proxy/import-files", { method: "POST", body: fd }));
+    }
+    if (text) {
+      mergeImport(acc, await post("/api/proxy/import", { text, days }));
+      $("pxBulk").value = "";
+    }
+    showImportResult(acc);
+    PX_PICKED.length = 0;
+    renderPickedFiles();
+    if (testAfter) await testAllProxies();
+  } catch (e) { fail(e); }
+}
+
+$("btnPickPx").onclick = () => $("pxFiles").click();
+$("pxFiles").onchange = (e) => { addPickedFiles(e.target.files); e.target.value = ""; };
+$("btnImportPx").onclick = () => importProxies(false);
+$("btnImportTest").onclick = () => importProxies(true);
+renderPickedFiles();
+
+async function testAllProxies() {
+  toast("正在测试前 50 个出口，可能要几十秒…");
+  try {
+    const r = await post("/api/proxy/test", { limit: 50 });
+    const ok = (r.results || []).filter((x) => x.ok).length;
+    toast(`${ok}/${r.tested} 个可用（池内共 ${r.pool_total} 个）`, ok === 0);
+    loadProxies();
+  } catch (e) { fail(e); }
+}
+$("btnTestAll").onclick = testAllProxies;
+$("pxPrev").onclick = () => { pxOffset = Math.max(0, pxOffset - PX_PAGE); loadProxies(); };
+$("pxNext").onclick = () => { pxOffset += PX_PAGE; loadProxies(); };
+$("pxQ").oninput = (() => {
+  let t;
+  return () => { clearTimeout(t); t = setTimeout(() => { pxOffset = 0; loadProxies(); }, 250); };
+})();
+$("btnReloadPx").onclick = async () => {
+  try { await post("/api/proxy/reload"); toast("已重读 proxies.txt"); loadProxies(); } catch (e) { fail(e); }
+};
+$("btnClearPxCd").onclick = async () => {
+  try { await post("/api/proxy/clear_cooldown"); toast("冷却已清除"); loadProxies(); } catch (e) { fail(e); }
+};
+$("btnPurgePx").onclick = async () => {
+  if (!confirm("删除所有已到期的代理？这一批就整批作废了。")) return;
+  try {
+    const r = await post("/api/proxy/purge_expired");
+    toast(r.removed ? `已清理 ${r.removed} 个，剩余 ${r.remaining} 个` : "没有过期代理", !r.removed);
+    loadProxies();
+  } catch (e) { fail(e); }
+};
+
+/* ==========================================================================
+   渠道（Space）
+   ========================================================================== */
+async function loadChannels() {
+  try {
+    const r = await api("/api/channels");
+    $("badgeCh").textContent = r.items.length;
+    $("chActive").textContent = r.active.length
+      ? `当前启用 ${r.active.length} 个：${r.active.join("  ·  ")}`
+      : "当前没有启用任何渠道 —— 生成会直接失败";
+
+    $("chRows").innerHTML = r.items.length ? r.items.map((c, i) => {
+      const st = c.stage === "RUNNING"
+        ? '<span class="tag ok">运行中</span>'
+        : c.stage
+          ? `<span class="tag warn">${esc(c.stage)}</span>`
+          : '<span class="tag">未探测</span>';
+      const cmp = c.compatible === true
+        ? '<span class="tag ok">兼容</span>'
+        : c.compatible === false
+          ? `<span class="tag err">${esc(c.reason || c.error || "不兼容")}</span>`
+          : '<span class="tag">未测</span>';
+      return `<tr>
+        <td>
+          ${c.note
+            ? `<div style="font-weight:500;color:var(--text)">${esc(c.note)}</div>
+               <div class="tiny dim mono">${esc(c.space)}</div>`
+            : `<div class="mono" style="font-weight:500;color:var(--text)">${esc(c.space)}</div>`}
+        </td>
+        <td>${st}${c.likes ? `<div class="tiny dim">${c.likes} likes</div>` : ""}</td>
+        <td>${cmp}</td>
+        <td>
+          <label class="switch">
+            <input type="checkbox" data-ch="${i}" ${c.enabled ? "checked" : ""} />
+            <span></span>
+          </label>
+        </td>
+        <td class="nowrap">
+          <button class="btn ghost sm" data-probe="${esc(c.space)}">测试</button>
+          <button class="btn danger sm" data-delch="${esc(c.space)}">移除</button>
+        </td>
+      </tr>`;
+    }).join("") : `<tr><td colspan="5" class="empty">还没有渠道，上面加一个</td></tr>`;
+
+    $("chRows").querySelectorAll("[data-ch]").forEach((el) => {
+      el.onchange = async () => {
+        const c = r.items[+el.dataset.ch];
+        el.disabled = true;
+        try {
+          await post("/api/channels/toggle", { space: c.space, enabled: el.checked });
+          toast(`${c.note || c.space} 已${el.checked ? "启用" : "关闭"}`);
+          loadChannels();
+        } catch (e) { fail(e); el.checked = !el.checked; el.disabled = false; }
+      };
+    });
+    $("chRows").querySelectorAll("[data-probe]").forEach((b) => {
+      b.onclick = () => probeChannels(b.dataset.probe);
+    });
+    $("chRows").querySelectorAll("[data-delch]").forEach((b) => {
+      b.onclick = async () => {
+        if (!confirm(`移除渠道 ${b.dataset.delch}？`)) return;
+        try { await post("/api/channels/remove", { space: b.dataset.delch }); toast("已移除"); loadChannels(); }
+        catch (e) { fail(e); }
+      };
+    });
+  } catch (e) { fail(e); }
+}
+
+async function probeChannels(space) {
+  toast(space ? "测试中…" : "正在探测全部渠道，可能要几十秒…");
+  try {
+    const r = await post("/api/channels/probe", space ? { space } : {});
+    const ok = (r.results || []).filter((x) => x.compatible).length;
+    const total = (r.results || []).length;
+    toast(`${ok}/${total} 个兼容` + (r.proxy ? "" : "（没走代理，可能探测失败）"), ok === 0);
+    loadChannels();
+  } catch (e) { fail(e); }
+}
+
+$("btnProbeAll").onclick = () => probeChannels(null);
+$("btnAddCh").onclick = async () => {
+  const space = $("chSpace").value.trim();
+  if (!space.includes("/")) return toast("格式应为 owner/name", true);
+  try {
+    await post("/api/channels/add", {
+      space,
+      note: $("chNote").value.trim(),
+      enabled: true,
+    });
+    $("chSpace").value = ""; $("chNote").value = "";
+    toast("已添加，建议点「测试」确认兼容性");
+    loadChannels();
+  } catch (e) { fail(e); }
+};
+$("chSpace").addEventListener("keydown", (e) => { if (e.key === "Enter") $("btnAddCh").click(); });
+
+/* ==========================================================================
+   画廊
+   ========================================================================== */
+/* 分页 + 懒加载：一次只拉 GAL_PAGE 条，滚到底再要下一页；
+   图片也先挂着 data-src，滚到视口附近才开始下载。 */
+const GAL_PAGE = 30;
+let galCache = [];
+let galTotal = 0;
+let galHasMore = true;
+let galLoading = false;
+let galSeq = 0;              /* 搜索词一变就 +1，用来丢弃过期响应 */
+let dtIndex = -1;
+
+/* 图片懒加载：进视口前 400px 才把 data-src 换成 src */
+const galImgObserver = new IntersectionObserver((entries) => {
+  for (const e of entries) {
+    if (!e.isIntersecting) continue;
+    const img = e.target;
+    if (img.dataset.src) { img.src = img.dataset.src; delete img.dataset.src; }
+    galImgObserver.unobserve(img);
+  }
+}, { rootMargin: "400px 0px" });
+
+function galCardHTML(x, i) {
+  const ratio = (Number(x.height) || 1) / (Number(x.width) || 1);
+  return `<div class="gal-card" data-gal="${i}" data-ratio="${ratio}">
+      <img data-src="${esc(x.image_url)}" alt=""
+           style="aspect-ratio:${esc(x.width || 1)}/${esc(x.height || 1)}"
+           onerror="this.parentNode.classList.add('broken')" />
+    </div>`;
+}
+
+/* 重置并拉第一页（切面板、改搜索、扫描/清空之后都走这里） */
+async function loadGallery() {
+  galSeq += 1;
+  galCache = [];
+  galTotal = 0;
+  galHasMore = true;
+  dtIndex = -1;
+  $("galGrid").innerHTML = "";
+  /* 上一批可能还在飞（会被 seq 校验丢弃），等它落地再拉新的，否则锁一直被占着 */
+  for (let i = 0; i < 100 && galLoading; i++) {
+    await new Promise((r) => setTimeout(r, 30));
+  }
+  await galNextPage();
+}
+
+/* 追加一页 */
+async function galNextPage() {
+  if (galLoading || !galHasMore) return;
+  galLoading = true;
+  const seq = galSeq;
+  try {
+    const q = encodeURIComponent($("galQ").value.trim());
+    const mode = encodeURIComponent($("galMode").value);
+    const offset = galCache.length;
+    const r = await api(`/api/gallery?q=${q}&mode=${mode}&limit=${GAL_PAGE}&offset=${offset}`);
+    if (seq !== galSeq) return;                    /* 条件变了，这批作废 */
+
+    galTotal = r.total;
+    $("badgeGal").textContent = r.total;
+    const items = r.items || [];
+    galCache = galCache.concat(items);
+    galHasMore = items.length > 0 && galCache.length < galTotal;
+
+    if (!galCache.length) {
+      $("galGrid").innerHTML = `<div class="empty"><b>画廊是空的</b>生成几张图就有了</div>`;
+      return;
+    }
+
+    const grid = $("galGrid");
+    const holder = document.createElement("div");
+    holder.innerHTML = items.map((x, k) => galCardHTML(x, offset + k)).join("");
+    for (const el of Array.from(holder.children)) {
+      grid.appendChild(el);
+      el.onclick = () => openDetail(+el.dataset.gal);
+      const img = el.querySelector("img");
+      if (img) galImgObserver.observe(img);        /* 滚到附近才给 src */
+    }
+    layoutGallery();
+  } catch (e) {
+    if (seq === galSeq) fail(e);
+  } finally {
+    galLoading = false;
+  }
+}
+
+/* 滚到离底部 600px 就自动要下一页 */
+const galMoreObserver = new IntersectionObserver((entries) => {
+  if (!galCache.length) return;          /* 首屏由 loadGallery 拉，哨兵别抢跑 */
+  if (entries.some((e) => e.isIntersecting)) galNextPage();
+}, { rootMargin: "600px 0px" });
+
+/* 瀑布流排版：第 i 张固定落在第 i % 列数 列，所以从左往右数就是 1、2、3…
+   CSS 多列（column-width）是竖着填的，读起来变成从上往下，所以位置自己算。 */
+const GAL_GAP = 12;
+const GAL_MIN_COL = 208;
+let galLayoutTries = 0;
+
+function layoutGallery() {
+  const box = $("galGrid");
+  if (!box) return;
+  const cards = Array.from(box.querySelectorAll("[data-gal]"));
+  if (!cards.length) return;
+
+  const width = box.clientWidth;
+  if (!width) {                       /* 面板还没显示出来，下一帧再试 */
+    if (galLayoutTries++ < 60) requestAnimationFrame(layoutGallery);
+    return;
+  }
+  galLayoutTries = 0;
+
+  const cols = Math.max(1, Math.floor((width + GAL_GAP) / (GAL_MIN_COL + GAL_GAP)));
+  const colW = (width - GAL_GAP * (cols - 1)) / cols;
+  const heights = new Array(cols).fill(0);
+
+  cards.forEach((card, i) => {
+    const col = i % cols;                        /* ← 横着数 */
+    const ratio = Number(card.dataset.ratio) || 1;
+    card.style.width = `${colW}px`;
+    card.style.left = `${col * (colW + GAL_GAP)}px`;
+    card.style.top = `${heights[col]}px`;
+    heights[col] += colW * ratio + GAL_GAP;
+    card.classList.add("placed");
+  });
+
+  box.style.height = `${Math.max(...heights) - GAL_GAP}px`;
+}
+
+window.addEventListener("resize", (() => {
+  let t;
+  return () => { clearTimeout(t); t = setTimeout(layoutGallery, 120); };
+})());
+
+function dtCur() { return galCache[dtIndex] || null; }
+
+/* 打开第 i 张（自动取模，首尾循环） */
+function openDetail(i) {
+  if (!galCache.length) return;
+  dtIndex = ((i % galCache.length) + galCache.length) % galCache.length;
+  const x = galCache[dtIndex];
+
+  $("dtPos").textContent = `${dtIndex + 1} / ${galCache.length}`;
+  $("dtImg").src = x.image_url;
+  $("dtImg").alt = x.prompt || "";
+  $("dtBody").innerHTML = [
+    ["提示词", x.prompt], ["模式", x.mode], ["画幅", x.aspect_ratio],
+    ["尺寸", `${x.width}×${x.height}`], ["步数", x.steps], ["种子", x.seed],
+    ["账号", x.account], ["出口", x.proxy || "直连"], ["卡密", x.license || "—"],
+    ["指纹", x.fingerprint || "—"], ["耗时", x.elapsed ? x.elapsed + "s" : "—"],
+    ["生成时间", fmtTime(x.created)],
+  ].map(([k, v]) => `<div class="${k === "提示词" ? "full" : ""}">
+      <div class="k">${esc(k)}</div><div class="v">${esc(v ?? "—")}</div></div>`).join("");
+  openModal("modalDetail");
+}
+
+async function navDetail(delta) {
+  if (dtIndex < 0) return;
+  const next = dtIndex + delta;
+  /* 走到已加载的末尾了，先把下一页拉下来再翻 */
+  if (next >= galCache.length && galHasMore) await galNextPage();
+  if (!galCache.length) return;
+  openDetail(next);                     /* openDetail 内部取模，首尾循环 */
+}
+
+$("dtPrev").onclick = (e) => { e.stopPropagation(); navDetail(-1); };
+$("dtNext").onclick = (e) => { e.stopPropagation(); navDetail(1); };
+
+/* 左右键翻页、Esc 关闭；只在详情弹窗打开时接管 */
+document.addEventListener("keydown", (e) => {
+  if (!$("modalDetail").classList.contains("on")) return;
+  if (e.key === "ArrowLeft") { e.preventDefault(); navDetail(-1); }
+  else if (e.key === "ArrowRight") { e.preventDefault(); navDetail(1); }
+  else if (e.key === "Escape") closeModals();
+});
+
+$("dtCopy").onclick = () => { const x = dtCur(); if (x) copy(x.prompt || ""); };
+$("dtOpen").onclick = () => { const x = dtCur(); if (x) window.open(x.image_url, "_blank"); };
+$("dtDel").onclick = async () => {
+  const x = dtCur();
+  if (!x || !confirm("删除这条记录？（图片文件保留）")) return;
+  try {
+    await del("/api/gallery/" + encodeURIComponent(x.id));
+    closeModals(); toast("已删除"); loadGallery();
+  } catch (e) { fail(e); }
+};
+$("galQ").oninput = (() => { let t; return () => { clearTimeout(t); t = setTimeout(loadGallery, 250); }; })();
+$("galMode").onchange = loadGallery;
+galMoreObserver.observe($("galMore"));
+$("btnScanGal").onclick = async () => {
+  try { const r = await post("/api/gallery/scan"); toast(`扫描完成：新增 ${r.added}`); loadGallery(); }
+  catch (e) { fail(e); }
+};
+$("btnClearGal").onclick = async () => {
+  if (!confirm("清空画廊索引？图片文件会保留。")) return;
+  try { const r = await del("/api/gallery"); toast(`已清空 ${r.removed} 条`); loadGallery(); }
+  catch (e) { fail(e); }
+};
+
+/* ==========================================================================
+   口令 / 退出
+   ========================================================================== */
+$("btnPw").onclick = () => { $("pwMsg").textContent = ""; openModal("modalPw"); };
+$("pwSave").onclick = async () => {
+  const n1 = $("pwNew").value, n2 = $("pwNew2").value;
+  if (n1.length < 6) return ($("pwMsg").textContent = "新口令至少 6 位");
+  if (n1 !== n2) return ($("pwMsg").textContent = "两次输入不一致");
+  try {
+    await post("/api/auth/password", { current: $("pwOld").value, password: n1 });
+    closeModals(); toast("口令已修改");
+    $("pwOld").value = $("pwNew").value = $("pwNew2").value = "";
+  } catch (e) { $("pwMsg").textContent = e.message; }
+};
+$("btnLogout").onclick = async () => {
+  try { await post("/api/auth/logout"); } catch { /* 忽略 */ }
+  location.href = "/login";
+};
+$("btnRefresh").onclick = () => show(current);
+
+/* ---------- 启动 ---------- */
+(async () => {
+  try {
+    const cfg = await api("/api/config");
+    $("galMode").innerHTML = `<option value="">全部模式</option>` +
+      cfg.modes.map((m) => `<option value="${esc(m)}">${esc(m)}</option>`).join("");
+  } catch { /* 忽略 */ }
+  const initial = location.hash.slice(1);
+  show(PANELS.includes(initial) ? initial : "overview");
+  setInterval(() => { if (current === "overview") loadOverview(); }, 15000);
+})();
+</script>
+</body>
+</html>

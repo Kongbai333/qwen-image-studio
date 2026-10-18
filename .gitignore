@@ -1,0 +1,46 @@
+# Runtime data
+data/
+outputs/
+uploads/
+tokens.txt
+proxies.txt
+licenses.json
+materials.json
+gallery.json
+jobs.json
+channels.json
+.admin.json
+.session.key
+admin_password.txt
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+config/*.txt
+!config/*.example.txt
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+dist/
+build/
+*.egg-info/
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Logs and temporary files
+*.log
+*.tmp
+*.swp

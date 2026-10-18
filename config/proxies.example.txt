@@ -1,0 +1,4 @@
+# Copy to the runtime data directory as proxies.txt.
+# Supported forms: host:port, http://host:port, socks5://host:port
+# Optional label: label|http://host:port
+proxy.example:8080

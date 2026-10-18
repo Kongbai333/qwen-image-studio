@@ -1,0 +1,9 @@
+diffusers @ git+https://github.com/huggingface/diffusers.git@9f1246971270c84dcbe71233edb7a519596a5d02
+transformers==5.17.0
+accelerate
+torchvision
+safetensors
+Pillow
+sentencepiece
+mcp
+gguf==0.19.0

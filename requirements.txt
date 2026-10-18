@@ -1,0 +1,11 @@
+# Qwen Image 2.1 GGUF Studio —— 客户端 / Web 服务依赖
+#
+# 安装：
+#   python -m pip install -r requirements.txt
+
+gradio_client>=2.0          # 官方 Space 是 Gradio 6.28，用官方客户端最稳
+fastapi>=0.110
+uvicorn>=0.27
+python-multipart>=0.0.9     # /api/upload 的 multipart 表单
+pillow>=10.0                # 参考图基本处理
+httpx>=0.27                 # 渠道探测、集成测试与 HTTP 客户端
