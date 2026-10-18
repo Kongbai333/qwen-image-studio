@@ -98,3 +98,16 @@ def test_release_tree_excludes_private_runtime_files():
     assert forbidden.isdisjoint(present)
     assert not (ROOT / "outputs").exists()
     assert not (ROOT / "uploads").exists()
+
+
+def test_default_compose_uses_published_image_without_build_context():
+    compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
+    assert "ghcr.io/kongbai333/qwen-image-studio:sha-d1a7e05" in compose
+    assert "build:" not in compose
+    assert "qwen-image-studio:local" not in compose
+
+
+def test_source_build_compose_keeps_local_build_workflow():
+    compose = (ROOT / "docker-compose.build.yml").read_text(encoding="utf-8")
+    assert "build:" in compose
+    assert "qwen-image-studio:local" in compose

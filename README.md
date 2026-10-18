@@ -58,30 +58,40 @@ python server.py --host 0.0.0.0 --port 7860
 
 ## Docker
 
+直接部署已发布镜像，不需要拉取源码，也不需要本地 `Dockerfile`：
+
 ```bash
-cp .env.example .env
-docker compose up --build -d
+docker compose up -d
 docker compose logs -f
 ```
 
-镜像把运行时数据放在 `/data` 卷中。默认端口是 `7860`，可通过 `.env` 中的
-`QWEN_PORT` 修改。
+默认 `docker-compose.yml` 使用公开镜像
+`ghcr.io/kongbai333/qwen-image-studio:sha-d1a7e05`。运行时数据放在
+`qwen-data` 卷的 `/data` 目录中。默认端口是 `7860`，可通过
+`.env` 中的 `QWEN_PORT` 修改。
 
-单独构建和运行：
+首次启动如果没有指定 `QWEN_ADMIN_PASSWORD`，服务会生成随机管理员口令并保存到
+`/data/admin_password.txt`：
 
 ```bash
-docker build -t qwen-image-studio:local .
-docker run --rm -p 7860:7860 \
-  -e QWEN_ADMIN_PASSWORD='replace-me' \
-  -v qwen-data:/data \
-  qwen-image-studio:local
+docker compose exec qwen-image-studio cat /data/admin_password.txt
+```
+
+如果你在 1Panel、Portainer 等面板中直接粘贴 YAML，只需粘贴仓库根目录的
+`docker-compose.yml`。不要同时粘贴 `docker-compose.build.yml`，也不要把
+`image` 改成 `qwen-image-studio:local`。
+
+从源码构建镜像：
+
+```bash
+docker compose -f docker-compose.build.yml up --build -d
 ```
 
 仓库附带的 GitHub Actions 工作流会在推送到 `main`、推送版本标签或手动运行时
 构建镜像；非 PR 构建会发布到：
 
 ```text
-ghcr.io/<github-owner>/qwen-image-studio
+ghcr.io/kongbai333/qwen-image-studio
 ```
 
 ## 配置

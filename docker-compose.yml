@@ -1,13 +1,10 @@
 services:
   qwen-image-studio:
-    build:
-      context: .
-    image: qwen-image-studio:local
+    image: ghcr.io/kongbai333/qwen-image-studio:sha-d1a7e05
     ports:
       - "${QWEN_PORT:-7860}:7860"
     environment:
       QWEN_DATA_DIR: /data
-      QWEN_ADMIN_PASSWORD: "${QWEN_ADMIN_PASSWORD:-}"
       QWEN_HF_TOKENS: "${QWEN_HF_TOKENS:-}"
       QWEN_PROXIES: "${QWEN_PROXIES:-}"
       QWEN_SPACES: "${QWEN_SPACES:-}"
