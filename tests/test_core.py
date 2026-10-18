@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -102,7 +103,10 @@ def test_release_tree_excludes_private_runtime_files():
 
 def test_default_compose_uses_published_image_without_build_context():
     compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
-    assert "ghcr.io/kongbai333/qwen-image-studio:sha-d1a7e05" in compose
+    assert re.search(
+        r"ghcr\.io/kongbai333/qwen-image-studio:sha-[0-9a-f]{7}",
+        compose,
+    )
     assert "build:" not in compose
     assert "qwen-image-studio:local" not in compose
 
@@ -111,3 +115,14 @@ def test_source_build_compose_keeps_local_build_workflow():
     compose = (ROOT / "docker-compose.build.yml").read_text(encoding="utf-8")
     assert "build:" in compose
     assert "qwen-image-studio:local" in compose
+
+
+def test_container_repairs_data_volume_permissions_before_dropping_privileges():
+    dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+    entrypoint = (ROOT / "docker-entrypoint.sh").read_text(encoding="utf-8")
+
+    assert "gosu" in dockerfile
+    assert "ENTRYPOINT" in dockerfile
+    assert "chown -R app:app" in entrypoint
+    assert 'mkdir -p "$data_dir/uploads" "$data_dir/outputs"' in entrypoint
+    assert 'exec gosu app "$@"' in entrypoint

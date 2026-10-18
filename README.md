@@ -70,6 +70,8 @@ docker compose logs -f
 `qwen-data` 卷的 `/data` 目录中。默认端口是 `7860`，可通过
 `.env` 中的 `QWEN_PORT` 修改。
 
+容器启动脚本会自动修正数据卷所有者的权限，再把服务切换到非 root 用户运行。
+
 首次启动如果没有指定 `QWEN_ADMIN_PASSWORD`，服务会生成随机管理员口令并保存到
 `/data/admin_password.txt`：
 

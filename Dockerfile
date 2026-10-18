@@ -7,7 +7,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     QWEN_DATA_DIR=/data
 
-RUN groupadd --system app \
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends gosu \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --system app \
     && useradd --system --gid app --create-home app
 
 WORKDIR /app
@@ -19,9 +22,8 @@ RUN python -m pip install --upgrade pip \
 COPY --chown=app:app . .
 
 RUN mkdir -p /data \
-    && chown -R app:app /app /data
-
-USER app
+    && chown -R app:app /app /data \
+    && chmod +x /app/docker-entrypoint.sh
 
 VOLUME ["/data"]
 EXPOSE 7860
@@ -30,4 +32,5 @@ STOPSIGNAL SIGTERM
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:7860/login', timeout=4).read(1)"
 
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["python", "server.py", "--host", "0.0.0.0", "--port", "7860"]
