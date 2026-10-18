@@ -66,7 +66,7 @@ docker compose logs -f
 ```
 
 默认 `docker-compose.yml` 使用公开镜像
-`ghcr.io/kongbai333/qwen-image-studio:sha-d1a7e05`。运行时数据放在
+`ghcr.io/kongbai333/qwen-image-studio:sha-66e4665`。运行时数据放在
 `qwen-data` 卷的 `/data` 目录中。默认端口是 `7860`，可通过
 `.env` 中的 `QWEN_PORT` 修改。
 

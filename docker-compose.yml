@@ -1,6 +1,6 @@
 services:
   qwen-image-studio:
-    image: ghcr.io/kongbai333/qwen-image-studio:sha-d1a7e05
+    image: ghcr.io/kongbai333/qwen-image-studio:sha-66e4665
     ports:
       - "${QWEN_PORT:-7860}:7860"
     environment:
